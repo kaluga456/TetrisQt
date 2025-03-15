@@ -10,7 +10,7 @@ QGameFieldScene::QGameFieldScene(QObject *parent) : QGraphicsScene{parent}, IsGa
 void QGameFieldScene::Init(const QRectF& ParentRect)
 {
     //set background
-    QColor brush_color{64, 64, 64};
+    QColor brush_color{32, 32, 32};
     QBrush brush{brush_color, Qt::BrushStyle::SolidPattern};
     setBackgroundBrush(brush);
 

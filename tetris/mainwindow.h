@@ -52,7 +52,8 @@ public:
 
     //timer events
 
-public slots:
+private slots:
+    void OnAbout();
     void teTickTimer();
 
 private:

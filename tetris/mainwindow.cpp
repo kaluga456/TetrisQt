@@ -1,5 +1,6 @@
 #include <QtDebug>
 #include <QColor>
+#include "about.h"
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 
@@ -12,6 +13,11 @@ MainWindow::MainWindow(QWidget *parent)
     , GameState{GS_NO_GAME}
 {
     ui->setupUi(this);
+
+    setWindowTitle(APP_FULL_NAME);
+
+    //ui events
+    connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::OnAbout);
 
     //init logic
     TetrisGame.set_generator(this);
@@ -65,8 +71,7 @@ void MainWindow::keyPressEvent(QKeyEvent *key_event)
             ProcessResult(TetrisGame.rotate_left());
         break;
 
-    //TODO:
-    case Qt::Key::Key_Q:
+    case Qt::Key::Key_Shift:
         if(IsRunning())
             ProcessResult(TetrisGame.rotate_right());
         break;
@@ -119,6 +124,23 @@ void MainWindow::OnTest2()
     const int result = TetrisGame.move_down();
     if(result != tetris::RESULT_NONE)
         GameFieldScene->RePaint();
+}
+
+void MainWindow::OnAbout()
+{
+    QMessageBox mb;
+    mb.setIcon(QMessageBox::Information);
+    mb.setWindowTitle(APP_NAME);
+
+    mb.setText(APP_FULL_NAME
+        "\n\n"
+        "Controls:\n"
+        "Move shape:\tASD or arrow keys\n"
+        "Rotate shape:\tW or UP\n"
+        "Drop shape:\tSPACE\n");
+
+    mb.setStandardButtons(QMessageBox::Ok);
+    mb.exec();
 }
 
 void MainWindow::ueNewGame()
@@ -254,7 +276,7 @@ bool MainWindow::QueryEndGame() const
 
     QMessageBox mb;
     mb.setIcon(QMessageBox::Warning);
-    mb.setWindowTitle("Tetris");
+    mb.setWindowTitle(APP_NAME);
     mb.setText("End current game?");
     mb.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
     mb.setDefaultButton(QMessageBox::Ok);

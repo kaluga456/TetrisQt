@@ -26,6 +26,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         TetrisEngine.cpp TetrisEngine.h
         random.cpp random.h
         QMainScene.h QMainScene.cpp
+        about.h
 
     )
 # Define target properties for Android with Qt 6 as:
