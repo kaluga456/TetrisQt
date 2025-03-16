@@ -1,6 +1,26 @@
 #ifndef OPTIONS_H
 #define OPTIONS_H
 
+#include <map>
+#include <QDate>
+
+class CBestResults
+{
+public:
+    using const_iterator = std::map<int, QDate>::const_reverse_iterator;
+
+    static constexpr size_t MAX_RESULTS = 10;
+
+    const_iterator beign() const {return Results.crbegin();}
+    const_iterator end() const {return Results.crend();}
+
+    bool add(int result);
+    bool add(int result, const QDate& date);
+
+private:
+    std::map<int, QDate> Results;
+};
+
 class COptions
 {
 public:
@@ -21,6 +41,10 @@ public:
         MAX_KEYBOARD_SPEED = 175
     };
     int KeySpeed{DEF_KEYBOARD_SPEED};
+
+    CBestResults BestResults;
 };
+
+extern COptions Options;
 
 #endif // OPTIONS_H

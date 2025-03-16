@@ -87,7 +87,7 @@ private:
     app::random_value<int, 100, 255> RandomColor;
 
     //game logic
-    QGameFieldScene* GameFieldScene;
+    QMainScene* MainScene;
 
     //timers
     QTimer* timerTick;
@@ -108,6 +108,6 @@ private:
     void StartNewGame();
     void EndGame();
     void Pause(bool val);
-    bool QueryEndGame() const;
+    bool QueryEndGame();
 };
 #endif // MAINWINDOW_H

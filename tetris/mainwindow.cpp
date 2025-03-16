@@ -6,7 +6,6 @@
 #include "./ui_mainwindow.h"
 
 extern MainWindow* MainWnd;
-COptions Options;
 tetris::engine TetrisGame;
 
 constexpr int MAIN_PADDING = 5;
@@ -17,8 +16,6 @@ MainWindow::MainWindow(QWidget *parent)
     , GameState{GS_NO_GAME}
 {
     Options.Load();
-
-
 
     ui->setupUi(this);
 
@@ -36,29 +33,26 @@ MainWindow::MainWindow(QWidget *parent)
     TetrisGame.set_generator(this);
 
     //init controls
-    QRect rect = ui->GameFieldView->frameRect();
-    rect.setX(MAIN_PADDING);
-    rect.setY(MAIN_PADDING);
-    ui->GameFieldView->setGeometry(rect);
+    ui->GameFieldView->setEnabled(false);
 
     //QRectF view_rect;
     QRectF scene_rect;
 
     //init main scene
-    GameFieldScene = new QGameFieldScene(this);
+    MainScene = new QMainScene(this);
     ui->GameFieldView->setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
     ui->GameFieldView->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
     ui->GameFieldView->setAlignment(Qt::AlignLeft | Qt::AlignTop);
-    ui->GameFieldView->setScene(GameFieldScene);
-    GameFieldScene->Init();
+    ui->GameFieldView->setScene(MainScene);
+    MainScene->Init();
+    MainScene->ResetStat();
 
     //main scene pos
     scene_rect = ui->GameFieldView->sceneRect();
     ui->GameFieldView->move(MAIN_PADDING, MAIN_PADDING);
     ui->GameFieldView->resize(static_cast<int>(scene_rect.width()), static_cast<int>(scene_rect.height()));
 
-    //TODO: set main window geometry
-    //QRect rect_frame = frameGeometry();
+    //set main window geometry
     QRect rect_client = centralWidget()->geometry();
     //const int frame_diff_x = rect_frame.width() - rect_client.width();
     const int frame_diff_y = /*rect_frame.height() - */rect_client.height();
@@ -88,13 +82,15 @@ MainWindow::~MainWindow()
     delete timerMoveRight;
     delete timerMoveLeft;
 
-    delete GameFieldScene;
+    delete MainScene;
     delete ui;
 }
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     if(IsGame() && false == QueryEndGame())
         return;
+
+    EndGame();
 
     QPoint p = pos();
     Options.LayoutLeft =p.x();
@@ -142,11 +138,8 @@ void MainWindow::keyPressEvent(QKeyEvent *key_event)
     case Qt::Key::Key_Left:
         if(false == IsRunning())
             break;
-
-        //TODO:
         if(timerMoveLeft->Start())
             ProcessResult(TetrisGame.move_left());
-
         break;
     case Qt::Key::Key_D:
     case Qt::Key::Key_Right:
@@ -199,20 +192,11 @@ void MainWindow::keyReleaseEvent(QKeyEvent *key_event)
 
 void MainWindow::OnTest1()
 {
-    //QString format{"%3 %1 | %2 %1\n"};
-    //QString str = format.arg(pos.x(), pos.y(), pos.rx(), pos.ry());
 
-    //const qreal block_size = scene_rect.width() / GAME_FIELD_WIDTH;
-    //ui->GameFieldView->setSceneRect(scene_rect);
-    //qDebug() << scene_rect.x() << ":" << scene_rect.y() << ":" <<  scene_rect.width() << ":" <<  scene_rect.height();
-
-    TetrisGame.new_game();
 }
 void MainWindow::OnTest2()
 {
-    const int result = TetrisGame.move_down();
-    if(result != tetris::RESULT_NONE)
-        GameFieldScene->RePaint();
+
 }
 
 void MainWindow::OnAbout()
@@ -224,10 +208,7 @@ void MainWindow::OnAbout()
     mb.setText(APP_FULL_NAME
                "\n" APP_URL
                "\n\n"
-                "Controls:\n"
-                "Move shape:\tASD or arrow keys\n"
-                "Rotate shape:\tW or UP\n"
-                "Drop shape:\tSPACE\n");
+                APP_HELP);
 
     mb.setStandardButtons(QMessageBox::Ok);
     mb.exec();
@@ -239,6 +220,8 @@ void MainWindow::ueNewGame()
     {
         if(false == QueryEndGame())
             return;
+
+        EndGame();
         StartNewGame();
     }
     SwitchState(GS_RUNNING);
@@ -280,6 +263,7 @@ void MainWindow::ProcessResult(int engine_result)
     case tetris::RESULT_NONE:
         return;
     case tetris::RESULT_SHAPE:
+        MainScene->SetScore(TetrisGame.get_score());
         break;
     case tetris::RESULT_CHANGED:
         break;
@@ -290,7 +274,7 @@ void MainWindow::ProcessResult(int engine_result)
         Q_ASSERT(0);
         return;
     }
-    GameFieldScene->RePaint();
+    MainScene->RePaint();
 }
 void MainWindow::SwitchState(int new_state)
 {
@@ -313,7 +297,7 @@ void MainWindow::SwitchState(int new_state)
     }
     case GS_RUNNING:
     {
-        switch(GameState)
+        switch(new_state)
         {
         case GS_NO_GAME:
             EndGame();
@@ -326,7 +310,7 @@ void MainWindow::SwitchState(int new_state)
     }
     case GS_PAUSED:
     {
-        switch(GameState)
+        switch(new_state)
         {
         case GS_NO_GAME:
             EndGame();
@@ -344,15 +328,21 @@ void MainWindow::SwitchState(int new_state)
 
 void MainWindow::StartNewGame()
 {
-    GameFieldScene->SetText("");
+    MainScene->SetText("");
+    MainScene->ResetStat();
     TetrisGame.new_game();
-    GameFieldScene->RePaint();
+    MainScene->RePaint();
     timerTick->start(1000);
 }
 void MainWindow::EndGame()
 {
-    GameFieldScene->SetText("GAME OVER");
+    MainScene->SetText("GAME OVER");
     timerTick->stop();
+
+    const int result = TetrisGame.get_score();
+    MainScene->SetScore(result);
+    if(Options.BestResults.add(result))
+        MainScene->UpdateBest();
 }
 void MainWindow::Pause(bool val)
 {
@@ -363,20 +353,24 @@ void MainWindow::Pause(bool val)
     {
         if(false == val)
             return;
-        GameFieldScene->SetText("PAUSED");
+        MainScene->SetText("PAUSED");
     }
     else if(GS_PAUSED == GameState)
     {
         if(true == val)
             return;
-        GameFieldScene->SetText("");
+        MainScene->SetText("");
     }
 }
 
-bool MainWindow::QueryEndGame() const
+bool MainWindow::QueryEndGame()
 {
     if(false == IsGame())
         return false;
+
+    const bool running = (GS_RUNNING == GameState);
+    if(running)
+        Pause(true);
 
     QMessageBox mb;
     mb.setIcon(QMessageBox::Warning);
@@ -384,6 +378,11 @@ bool MainWindow::QueryEndGame() const
     mb.setText("End current game?");
     mb.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
     mb.setDefaultButton(QMessageBox::Ok);
-    return QMessageBox::Ok == mb.exec();
+    const bool result = QMessageBox::Ok == mb.exec();
+
+    if(running)
+        Pause(false);
+
+    return result;
 }
 

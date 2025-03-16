@@ -14,11 +14,11 @@ constexpr int BLOCK_VIEW_SIZE = 28; //CGameFieldView: 336 x 672 for block size =
 constexpr int GAME_FIELD_VIEW_WIDTH = (BLOCK_VIEW_SIZE * tetris::GAME_FIELD_WIDTH);
 constexpr int GAME_FIELD_VIEW_HEIGHT = (BLOCK_VIEW_SIZE * tetris::GAME_FIELD_HEIGHT);
 
-class QGameFieldScene : public QGraphicsScene
+class QMainScene : public QGraphicsScene
 {
     Q_OBJECT
 public:
-    explicit QGameFieldScene(QObject *parent = nullptr);
+    explicit QMainScene(QObject *parent = nullptr);
 
     void Init();
 
@@ -34,25 +34,37 @@ public:
     void SetScore(int val);
     void SetSpeed(int val);
     void SetTime(int val);
+    void ResetStat();
+
+    void UpdateBest();
 
 private:
     QGraphicsRectItem* Blocks[tetris::GAME_FIELD_WIDTH][tetris::GAME_FIELD_HEIGHT];
     tetris::block_t Context[tetris::GAME_FIELD_WIDTH][tetris::GAME_FIELD_HEIGHT];
 
-    QRectF game_field_frame;
+    //frames
+    QRectF GameFieldFrame;
+    QRectF StatFrame;
+    QRectF BestFrame;
+    QRectF HelpFrame;
 
     //
     QGraphicsRectItem* giBackground{nullptr};
-    QGraphicsRectItem* giWall;
+    QGraphicsRectItem* giVertDelimiter;
+    QGraphicsRectItem* giHorzDelimiter1;
+    QGraphicsRectItem* giHorzDelimiter2;
 
     //main text
     bool IsGameOver{false}; //if true draw game over info
     bool IsPause{false}; //if true draw game over info
-    QGraphicsSimpleTextItem* Text;
+    QGraphicsSimpleTextItem* Text{nullptr};
 
+    //
     QGraphicsSimpleTextItem* textScore{nullptr};
     QGraphicsSimpleTextItem* textSpeed{nullptr};
     QGraphicsSimpleTextItem* textTime{nullptr};
+    QGraphicsSimpleTextItem* textBest{nullptr};
+    QGraphicsSimpleTextItem* textHelp{nullptr};
 };
 
 #endif // MAINSCENE_H
