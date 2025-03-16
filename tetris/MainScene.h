@@ -1,5 +1,5 @@
-#ifndef QMAINSCENE_H
-#define QMAINSCENE_H
+#ifndef MAINSCENE_H
+#define MAINSCENE_H
 
 #include <QObject>
 #include <QColor>
@@ -8,7 +8,9 @@
 
 #include "TetrisEngine.h"
 
+//TODO:
 constexpr int BLOCK_VIEW_SIZE = 28; //CGameFieldView: 336 x 672 for block size = 28
+
 constexpr int GAME_FIELD_VIEW_WIDTH = (BLOCK_VIEW_SIZE * tetris::GAME_FIELD_WIDTH);
 constexpr int GAME_FIELD_VIEW_HEIGHT = (BLOCK_VIEW_SIZE * tetris::GAME_FIELD_HEIGHT);
 
@@ -18,23 +20,39 @@ class QGameFieldScene : public QGraphicsScene
 public:
     explicit QGameFieldScene(QObject *parent = nullptr);
 
-    void Init(const QRectF& ParentRect);
+    void Init();
 
-    //TODO:
     void RePaint();
     void DrawGameOver(bool val);
     void DrawPause(bool val);
     void SetText(const QString& text);
 
+    //TODO: show next shape
+    void SetShape(int val);
+
+    //stat text
+    void SetScore(int val);
+    void SetSpeed(int val);
+    void SetTime(int val);
+
 private:
-    qreal BlockSize{0};
     QGraphicsRectItem* Blocks[tetris::GAME_FIELD_WIDTH][tetris::GAME_FIELD_HEIGHT];
     tetris::block_t Context[tetris::GAME_FIELD_WIDTH][tetris::GAME_FIELD_HEIGHT];
 
-    //text
+    QRectF game_field_frame;
+
+    //
+    QGraphicsRectItem* giBackground{nullptr};
+    QGraphicsRectItem* giWall;
+
+    //main text
     bool IsGameOver{false}; //if true draw game over info
     bool IsPause{false}; //if true draw game over info
     QGraphicsSimpleTextItem* Text;
+
+    QGraphicsSimpleTextItem* textScore{nullptr};
+    QGraphicsSimpleTextItem* textSpeed{nullptr};
+    QGraphicsSimpleTextItem* textTime{nullptr};
 };
 
-#endif // QMAINSCENE_H
+#endif // MAINSCENE_H

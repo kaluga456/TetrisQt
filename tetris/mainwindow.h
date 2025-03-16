@@ -8,10 +8,29 @@
 #include <QGraphicsRectItem>
 #include <QPointF>
 #include <QTimer>
+#include <QElapsedTimer>
 
 #include "random.h"
 #include "TetrisEngine.h"
-#include "QMainScene.h"
+#include "options.h"
+#include "MainScene.h"
+
+extern COptions Options;
+
+class QKeyTimer : public QTimer
+{
+public:
+    QKeyTimer(QObject *parent = nullptr) : QTimer(parent) {}
+
+    bool Start()
+    {
+        if(isActive())
+            return false;
+
+        start(Options.KeySpeed);
+        return true;
+    }
+};
 
 //game state
 enum : int
@@ -38,8 +57,11 @@ public:
     //callbacks
     void generate(tetris::shape_t& shape) override;
 
+    void closeEvent(QCloseEvent *event) override;
+
     //user events
     void keyPressEvent(QKeyEvent* key_event) override;
+    void keyReleaseEvent(QKeyEvent* key_event) override;
     void uePause();
 
     //user events for game field
@@ -55,6 +77,7 @@ public:
 private slots:
     void OnAbout();
     void teTickTimer();
+    void teKeyTimer();
 
 private:
     Ui::MainWindow *ui;
@@ -68,6 +91,12 @@ private:
 
     //timers
     QTimer* timerTick;
+    QElapsedTimer* timerElapsed;
+
+    //key timers
+    QKeyTimer* timerMoveLeft;
+    QKeyTimer* timerMoveRight;
+    QKeyTimer* timerMoveDown;
 
     //game state
     int GameState{GS_NO_GAME};

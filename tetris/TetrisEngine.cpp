@@ -19,16 +19,16 @@ constexpr shape_layouts_t TETRIS_SHAPES[SHAPE_TYPE_COUNT]  =
     //SHAPE_TYPE_LINE
     {
         {
-            {0,1,0,0},
-            {0,1,0,0},
-            {0,1,0,0},
-            {0,1,0,0}
-        },
-        {
             {0,0,0,0},
             {1,1,1,1},
             {0,0,0,0},
             {0,0,0,0}
+        },
+        {
+            {0,1,0,0},
+            {0,1,0,0},
+            {0,1,0,0},
+            {0,1,0,0}
         },
         {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}},
         {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}}
@@ -101,9 +101,9 @@ constexpr shape_layouts_t TETRIS_SHAPES[SHAPE_TYPE_COUNT]  =
     //SHAPE_TYPE_SQUARE
     {
         {
+            {1,1,0,0},
+            {1,1,0,0},
             {0,0,0,0},
-            {0,1,1,0},
-            {0,1,1,0},
             {0,0,0,0}
         },
         {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}},
@@ -114,12 +114,6 @@ constexpr shape_layouts_t TETRIS_SHAPES[SHAPE_TYPE_COUNT]  =
     //SHAPE_TYPE_LL
     {
         {
-            {1,1,0,0},
-            {0,1,0,0},
-            {0,1,0,0},
-            {0,0,0,0}
-        },
-        {
             {0,0,1,0},
             {1,1,1,0},
             {0,0,0,0},
@@ -135,6 +129,12 @@ constexpr shape_layouts_t TETRIS_SHAPES[SHAPE_TYPE_COUNT]  =
             {0,0,0,0},
             {1,1,1,0},
             {1,0,0,0},
+            {0,0,0,0}
+        },
+        {
+            {1,1,0,0},
+            {0,1,0,0},
+            {0,1,0,0},
             {0,0,0,0}
         },
     },
@@ -142,12 +142,6 @@ constexpr shape_layouts_t TETRIS_SHAPES[SHAPE_TYPE_COUNT]  =
     //SHAPE_TYPE_RL
     {
         {
-            {0,1,1,0},
-            {0,1,0,0},
-            {0,1,0,0},
-            {0,0,0,0}
-        },
-        {
             {0,0,0,0},
             {1,1,1,0},
             {0,0,1,0},
@@ -163,6 +157,12 @@ constexpr shape_layouts_t TETRIS_SHAPES[SHAPE_TYPE_COUNT]  =
             {1,0,0,0},
             {1,1,1,0},
             {0,0,0,0},
+            {0,0,0,0}
+        },
+        {
+            {0,1,1,0},
+            {0,1,0,0},
+            {0,1,0,0},
             {0,0,0,0}
         },
     },
@@ -257,7 +257,8 @@ public:
     {
         shape.reset(SHAPE_TYPE_SQUARE, static_cast<block_t>(0x808080));
     }
-} default_generator;
+};
+static default_shape_generator default_generator;
 
 engine::engine() : ShapeGenerator{&default_generator}
 {
@@ -277,7 +278,7 @@ void engine::set_generator(shape_generator_t *generator /*= nullptr*/)
 }
 block_t engine::get_block(int x, int y) const
 {
-    if(Blocks[x][y])
+    if(Blocks[x][y] != BLOCK_NONE)
         return Blocks[x][y];
     return get_shape_block(x, y, Shape, ShapePos);
 }
@@ -305,7 +306,7 @@ int engine::new_shape()
 {
     //TODO:
     //new shape pos
-    ShapePos.X = GAME_FIELD_WIDTH / 2;
+    ShapePos.X = GAME_FIELD_WIDTH / 2 - 1;
     ShapePos.Y = 0;
 
     Shape = NextShape;

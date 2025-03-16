@@ -75,23 +75,13 @@ struct point_t
     point_t() : X{0}, Y{0} {}
     point_t(int x, int y) : X{static_cast<short>(x)}, Y{static_cast<short>(y)} {}
     point_t(const point_t& fp) : X{fp.X}, Y{fp.Y} {}
-
-    point_t& operator=(const point_t& rop)
-    {
-        X = rop.X;
-        Y = rop.Y;
-        return *this;
-    }
-
-    void move_left() {--X;}
-    void move_right() {++X;}
-    void move_down() {++Y;}
+    point_t& operator=(const point_t& rop) {X = rop.X; Y = rop.Y; return *this;}
 
     short X{0};
     short Y{0};
 };
 
-//input event result types
+//action result
 enum : int
 {
     RESULT_NONE = 0,    //nothing happen
@@ -113,8 +103,6 @@ public:
     block_t get_block(int x, int y) const;
     block_t get_shape_block(int x, int y, const shape_t& shape, const point_t& pos) const;
     const shape_t& get_next_shape() const { return NextShape; }
-
-    //removed lines
     int get_score() const {return Score;}
 
     //actions, return RESULT_ values
