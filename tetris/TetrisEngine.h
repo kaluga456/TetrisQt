@@ -1,35 +1,29 @@
 #pragma once
-#include <limits>
 
 namespace tetris
 {
 
-//shape types
-enum : int
-{
-    SHAPE_TYPE_LINE = 0,
-    SHAPE_TYPE_T,
-    SHAPE_TYPE_LZ,
-    SHAPE_TYPE_RZ,
-    SHAPE_TYPE_SQUARE,
-    SHAPE_TYPE_LL,
-    SHAPE_TYPE_RL,
-
-    SHAPE_TYPE_COUNT
-};
-
-//block context for outer code
+//block data defined by outer code (usually color)
 using block_t = unsigned int;
 constexpr block_t BLOCK_NONE = static_cast<block_t>(0);
 
-//game field coordinate
-using coord_t = unsigned char;
-
 //shape
-constexpr coord_t SHAPE_MATRIX_SIZE = 4;
-constexpr coord_t SHAPE_BLOCKS_COUNT = 4;
-constexpr size_t SHAPE_LAYOUT_COUNT = 4;
-using shape_matrix_t = coord_t[SHAPE_BLOCKS_COUNT][SHAPE_BLOCKS_COUNT];
+enum : int
+{
+    SHAPE_TYPE_I = 0,
+    SHAPE_TYPE_T,
+    SHAPE_TYPE_S,
+    SHAPE_TYPE_Z,
+    SHAPE_TYPE_O,
+    SHAPE_TYPE_L,
+    SHAPE_TYPE_J,
+
+    SHAPE_TYPE_COUNT
+};
+constexpr int SHAPE_MATRIX_SIZE = 4;
+constexpr int SHAPE_BLOCKS_COUNT = 4;
+constexpr int SHAPE_LAYOUT_COUNT = 4;
+using shape_matrix_t = unsigned char[SHAPE_BLOCKS_COUNT][SHAPE_BLOCKS_COUNT];
 
 class shape_t
 {
@@ -64,10 +58,8 @@ public:
 };
 
 //game field sizes
-constexpr coord_t MIN_FIELD_SIZE = static_cast<coord_t>(12);
-constexpr coord_t MAX_FIELD_SIZE = std::numeric_limits<coord_t>::max();
-constexpr coord_t GAME_FIELD_WIDTH = 12;
-constexpr coord_t GAME_FIELD_HEIGHT = 24;
+constexpr int GAME_FIELD_WIDTH = 12;
+constexpr int GAME_FIELD_HEIGHT = 24;
 
 //game field coordinates
 struct point_t

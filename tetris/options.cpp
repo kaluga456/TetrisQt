@@ -7,11 +7,11 @@
 
 COptions Options;
 
-bool CBestResults::add(int result)
+bool CBestScore::add(int result)
 {
     return add(result, QDate().currentDate());
 }
-bool CBestResults::add(int result, const QDate &date)
+bool CBestScore::add(int result, const QDate &date)
 {
     if(result <= 0) return false;
     if(Results.size() < MAX_RESULTS)
@@ -44,7 +44,7 @@ void COptions::Load()
     LayoutTop = settings.value("LayoutTop", 300).toInt();
 
     //best results
-    const int size = settings.beginReadArray("best");
+    const int size = settings.beginReadArray("scores");
     for (int i = 0; i < size; ++i)
     {
         settings.setArrayIndex(i);
@@ -62,9 +62,9 @@ void COptions::Save()
     settings.setValue("LayoutTop", LayoutTop);
 
     //best results
-    settings.beginWriteArray("result");
+    settings.beginWriteArray("scores");
     int index = 0;
-    for(CBestResults::const_iterator i = BestResults.beign(); i != BestResults.end(); ++i, ++index)
+    for(CBestScore::const_iterator i = BestResults.beign(); i != BestResults.end(); ++i, ++index)
     {
         settings.setArrayIndex(index);
         settings.setValue("result", i->first);

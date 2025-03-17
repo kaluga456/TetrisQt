@@ -10,6 +10,16 @@ tetris::engine TetrisGame;
 
 constexpr int MAIN_PADDING = 5;
 
+//#define CUSTOM_DEBUG
+#ifdef CUSTOM_DEBUG
+class debug_shape_generator : public tetris::shape_generator_t
+{
+public:
+    void generate(tetris::shape_t& shape) {shape.reset(tetris::SHAPE_TYPE_J, 0x808080);}
+};
+static debug_shape_generator debug_generator;
+#endif
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -27,10 +37,16 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowFlags(wnd_flags | Qt::Dialog | Qt::MSWindowsFixedSizeDialogHint);
 
     //ui events
+    connect(ui->actionNewGame, &QAction::triggered, this, &MainWindow::OnNewGame);
+    connect(ui->actionExit, &QAction::triggered, this, &MainWindow::OnExit);
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::OnAbout);
 
     //init logic
+#ifdef CUSTOM_DEBUG
+    TetrisGame.set_generator(&debug_generator);
+#else
     TetrisGame.set_generator(this);
+#endif
 
     //init controls
     ui->GameFieldView->setEnabled(false);
@@ -46,12 +62,14 @@ MainWindow::MainWindow(QWidget *parent)
     ui->GameFieldView->setScene(MainScene);
     MainScene->Init();
     MainScene->ResetStat();
+    MainScene->UpdateBest();
 
     //main scene pos
     scene_rect = ui->GameFieldView->sceneRect();
     ui->GameFieldView->move(MAIN_PADDING, MAIN_PADDING);
     ui->GameFieldView->resize(static_cast<int>(scene_rect.width()), static_cast<int>(scene_rect.height()));
 
+    //TODO: how to calculate client rect???
     //set main window geometry
     QRect rect_client = centralWidget()->geometry();
     //const int frame_diff_x = rect_frame.width() - rect_client.width();
@@ -85,28 +103,9 @@ MainWindow::~MainWindow()
     delete MainScene;
     delete ui;
 }
-void MainWindow::closeEvent(QCloseEvent *event)
-{
-    if(IsGame() && false == QueryEndGame())
-        return;
-
-    EndGame();
-
-    QPoint p = pos();
-    Options.LayoutLeft =p.x();
-    Options.LayoutTop =p.y();
-
-    Options.Save();
-
-    QWidget::closeEvent(event);
-}
-
 void MainWindow::generate(tetris::shape_t& shape)
 {
     const QRgb color{qRgb(RandomColor(),RandomColor(),RandomColor())};
-
-    //TEST:
-    //shape.reset(tetris::SHAPE_TYPE_T, color);
     shape.reset(RandomShape(), color);
 }
 void MainWindow::keyPressEvent(QKeyEvent *key_event)
@@ -170,7 +169,6 @@ void MainWindow::keyPressEvent(QKeyEvent *key_event)
         break;
     }
 }
-
 void MainWindow::keyReleaseEvent(QKeyEvent *key_event)
 {
     switch(key_event->key())
@@ -192,11 +190,14 @@ void MainWindow::keyReleaseEvent(QKeyEvent *key_event)
 
 void MainWindow::OnTest1()
 {
-
 }
 void MainWindow::OnTest2()
 {
+}
 
+void MainWindow::OnNewGame()
+{
+    SwitchState(GS_RUNNING);
 }
 
 void MainWindow::OnAbout()
@@ -204,12 +205,7 @@ void MainWindow::OnAbout()
     QMessageBox mb;
     mb.setIcon(QMessageBox::Information);
     mb.setWindowTitle(APP_NAME);
-
-    mb.setText(APP_FULL_NAME
-               "\n" APP_URL
-               "\n\n"
-                APP_HELP);
-
+    mb.setText(APP_FULL_NAME "\n" APP_URL "\n\n" APP_HELP);
     mb.setStandardButtons(QMessageBox::Ok);
     mb.exec();
 }
@@ -220,7 +216,6 @@ void MainWindow::ueNewGame()
     {
         if(false == QueryEndGame())
             return;
-
         EndGame();
         StartNewGame();
     }
@@ -257,7 +252,6 @@ void MainWindow::teKeyTimer()
 }
 void MainWindow::ProcessResult(int engine_result)
 {
-    //TODO:
     switch(engine_result)
     {
     case tetris::RESULT_NONE:
@@ -321,6 +315,8 @@ void MainWindow::SwitchState(int new_state)
         }
         break;
     }
+    default:
+        Q_ASSERT(0);
     }
 
     GameState = new_state;
@@ -353,20 +349,44 @@ void MainWindow::Pause(bool val)
     {
         if(false == val)
             return;
+        GameState = GS_PAUSED;
         MainScene->SetText("PAUSED");
     }
     else if(GS_PAUSED == GameState)
     {
         if(true == val)
             return;
+        GameState = GS_RUNNING;
         MainScene->SetText("");
     }
 }
+void MainWindow::OnExit()
+{
+    closeEvent(nullptr);
+}
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    if(IsGame() && false == QueryEndGame())
+    {
+        if(event) event->ignore();
+        return;
+    }
 
+    QPoint p = pos();
+    Options.LayoutLeft = p.x();
+    Options.LayoutTop = p.y();
+    Options.BestResults.add(TetrisGame.get_score());
+    Options.Save();
+
+    if(event)
+        QWidget::closeEvent(event);
+    else
+        QApplication::exit(0);
+}
 bool MainWindow::QueryEndGame()
 {
     if(false == IsGame())
-        return false;
+         return true;
 
     const bool running = (GS_RUNNING == GameState);
     if(running)

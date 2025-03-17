@@ -5,12 +5,9 @@
 #include <QColor>
 #include <QGraphicsScene>
 #include <QGraphicsRectItem>
-
 #include "TetrisEngine.h"
 
-//TODO:
-constexpr int BLOCK_VIEW_SIZE = 28; //CGameFieldView: 336 x 672 for block size = 28
-
+constexpr int BLOCK_VIEW_SIZE = 30;
 constexpr int GAME_FIELD_VIEW_WIDTH = (BLOCK_VIEW_SIZE * tetris::GAME_FIELD_WIDTH);
 constexpr int GAME_FIELD_VIEW_HEIGHT = (BLOCK_VIEW_SIZE * tetris::GAME_FIELD_HEIGHT);
 
@@ -50,13 +47,11 @@ private:
 
     //
     QGraphicsRectItem* giBackground{nullptr};
-    QGraphicsRectItem* giVertDelimiter;
-    QGraphicsRectItem* giHorzDelimiter1;
-    QGraphicsRectItem* giHorzDelimiter2;
+    QGraphicsRectItem* giVertDelimiter{nullptr};
+    QGraphicsRectItem* giHorzDelimiter1{nullptr};
+    QGraphicsRectItem* giHorzDelimiter2{nullptr};
 
     //main text
-    bool IsGameOver{false}; //if true draw game over info
-    bool IsPause{false}; //if true draw game over info
     QGraphicsSimpleTextItem* Text{nullptr};
 
     //

@@ -5,7 +5,7 @@
 #include "MainScene.h"
 #include "TetrisEngine.h"
 
-//sizes
+//sizes and colors
 constexpr qreal BLOCK_SIZE = 20;
 constexpr qreal GAME_FIELD_WIDTH = BLOCK_SIZE * tetris::GAME_FIELD_WIDTH;
 constexpr qreal GAME_FIELD_HEIGHT = BLOCK_SIZE * tetris::GAME_FIELD_HEIGHT;
@@ -30,10 +30,9 @@ constexpr const char* GAME_OVER_TEXT = "GAME OVER";
 
 extern tetris::engine TetrisGame;
 
-QMainScene::QMainScene(QObject *parent) : QGraphicsScene{parent}, IsGameOver{false}
+QMainScene::QMainScene(QObject *parent) : QGraphicsScene{parent}
 {
 }
-
 void QMainScene::Init()
 {
     //set background
@@ -64,7 +63,10 @@ void QMainScene::Init()
     {
         for(int y = 0; y < tetris::GAME_FIELD_HEIGHT; ++y)
         {
-            QRectF rect{game_field_rect.left() + BLOCK_SIZE * x,  game_field_rect.top() + BLOCK_SIZE * y, BLOCK_SIZE - MAIN_BLOCK_PAD, BLOCK_SIZE - MAIN_BLOCK_PAD};
+            QRectF rect{game_field_rect.left() + BLOCK_SIZE * x,
+                        game_field_rect.top() + BLOCK_SIZE * y,
+                        BLOCK_SIZE - MAIN_BLOCK_PAD,
+                        BLOCK_SIZE - MAIN_BLOCK_PAD};
             QGraphicsRectItem* gi = addRect(rect, no_pen);
             gi->hide();
             gi->setEnabled(false);
@@ -170,7 +172,6 @@ void QMainScene::DrawGameOver(bool val)
 {
     Text->setText(val ? GAME_OVER_TEXT : "");
 }
-
 void QMainScene::DrawPause(bool val)
 {
     Text->setText(val ? PAUSED_TEXT : "");
@@ -197,19 +198,22 @@ void QMainScene::SetSpeed(int val)
 }
 void QMainScene::SetTime(int val)
 {
+    if(0 == val)
+        textTime->setText("Time\t --:--:--");
 
+    //TODO:
 }
 void QMainScene::UpdateBest()
 {
-    std::string text = "Best results:\n";
-    CBestResults::const_iterator i = Options.BestResults.beign();
-    for(int index = 1; index <= CBestResults::MAX_RESULTS; ++index)
+    std::string text = "Best score:\n";
+    CBestScore::const_iterator i = Options.BestResults.beign();
+    for(int index = 1; index <= CBestScore::MAX_RESULTS; ++index)
     {
         if(i != Options.BestResults.end())
         {
-            constexpr const char* fs1 = "{:3d}{:7d}\t{:02d}.{:02d}.{:04d}\n";
+            constexpr const char* fs = "{:3d}{:7d}\t{:02d}.{:02d}.{:04d}\n";
             const QDate& date = i->second;
-            text += std::format(fs1, index, i->first, date.month(), date.day(), date.year());
+            text += std::format(fs, index, i->first, date.month(), date.day(), date.year());
             ++i;
         }
         else

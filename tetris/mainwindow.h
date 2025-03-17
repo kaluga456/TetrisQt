@@ -17,29 +17,6 @@
 
 extern COptions Options;
 
-class QKeyTimer : public QTimer
-{
-public:
-    QKeyTimer(QObject *parent = nullptr) : QTimer(parent) {}
-
-    bool Start()
-    {
-        if(isActive())
-            return false;
-
-        start(Options.KeySpeed);
-        return true;
-    }
-};
-
-//game state
-enum : int
-{
-    GS_NO_GAME = 0,
-    GS_RUNNING,
-    GS_PAUSED
-};
-
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -54,27 +31,25 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    //callbacks
     void generate(tetris::shape_t& shape) override;
 
-    void closeEvent(QCloseEvent *event) override;
 
     //user events
     void keyPressEvent(QKeyEvent* key_event) override;
     void keyReleaseEvent(QKeyEvent* key_event) override;
+    void closeEvent(QCloseEvent *event) override;
     void uePause();
-
-    //user events for game field
     void ueNewGame();
+
     void ProcessResult(int engine_result);
 
     //test
     void OnTest1();
     void OnTest2();
 
-    //timer events
-
 private slots:
+    void OnNewGame();
+    void OnExit();
     void OnAbout();
     void teTickTimer();
     void teKeyTimer();
@@ -82,11 +57,11 @@ private slots:
 private:
     Ui::MainWindow *ui;
 
-    //random
+    //random value generators
     app::random_value<int, 0, tetris::SHAPE_TYPE_COUNT - 1> RandomShape;
     app::random_value<int, 100, 255> RandomColor;
 
-    //game logic
+    //game view
     QMainScene* MainScene;
 
     //timers
@@ -94,17 +69,34 @@ private:
     QElapsedTimer* timerElapsed;
 
     //key timers
-    QKeyTimer* timerMoveLeft;
-    QKeyTimer* timerMoveRight;
-    QKeyTimer* timerMoveDown;
+    class QKeyTimer : public QTimer
+    {
+    public:
+        QKeyTimer(QObject *parent = nullptr) : QTimer(parent) {}
+
+        bool Start()
+        {
+            if(isActive())
+                return false;
+            start(Options.KeySpeed);
+            return true;
+        }
+    };
+    QKeyTimer* timerMoveLeft{nullptr};
+    QKeyTimer* timerMoveRight{nullptr};
+    QKeyTimer* timerMoveDown{nullptr};
 
     //game state
+    enum : int
+    {
+        GS_NO_GAME = 0,
+        GS_RUNNING,
+        GS_PAUSED
+    };
     int GameState{GS_NO_GAME};
     bool IsRunning() const {return GS_RUNNING == GameState;}
     bool IsGame() const {return GS_RUNNING == GameState || GS_PAUSED == GameState;}
     void SwitchState(int new_state);
-
-    //
     void StartNewGame();
     void EndGame();
     void Pause(bool val);

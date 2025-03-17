@@ -16,7 +16,7 @@ using namespace tetris;
 using shape_layouts_t = shape_matrix_t[SHAPE_LAYOUT_COUNT];
 constexpr shape_layouts_t TETRIS_SHAPES[SHAPE_TYPE_COUNT]  =
 {
-    //SHAPE_TYPE_LINE
+    //SHAPE_TYPE_I
     {
         {
             {0,0,0,0},
@@ -62,43 +62,43 @@ constexpr shape_layouts_t TETRIS_SHAPES[SHAPE_TYPE_COUNT]  =
         }
     },
 
-    //SHAPE_TYPE_LZ
+    //SHAPE_TYPE_S
     {
+        {
+            {0,0,0,0},
+            {0,1,1,0},
+            {1,1,0,0},
+            {0,0,0,0}
+        },
         {
             {0,1,0,0},
             {0,1,1,0},
             {0,0,1,0},
             {0,0,0,0}
         },
-        {
-            {0,0,0,0},
-            {0,1,1,0},
-            {1,1,0,0},
-            {0,0,0,0}
-        },
         {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}},
         {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}}
     },
 
-    //SHAPE_TYPE_RZ
+    //SHAPE_TYPE_Z
     {
+        {
+            {0,0,0,0},
+            {1,1,0,0},
+            {0,1,1,0},
+            {0,0,0,0}
+        },
         {
             {0,0,1,0},
             {0,1,1,0},
             {0,1,0,0},
             {0,0,0,0}
         },
-        {
-            {0,0,0,0},
-            {1,1,0,0},
-            {0,1,1,0},
-            {0,0,0,0}
-        },
         {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}},
         {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}}
     },
 
-    //SHAPE_TYPE_SQUARE
+    //SHAPE_TYPE_O
     {
         {
             {1,1,0,0},
@@ -111,20 +111,8 @@ constexpr shape_layouts_t TETRIS_SHAPES[SHAPE_TYPE_COUNT]  =
         {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}}
     },
 
-    //SHAPE_TYPE_LL
+    //SHAPE_TYPE_L
     {
-        {
-            {0,0,1,0},
-            {1,1,1,0},
-            {0,0,0,0},
-            {0,0,0,0}
-        },
-        {
-            {0,1,0,0},
-            {0,1,0,0},
-            {0,1,1,0},
-            {0,0,0,0}
-        },
         {
             {0,0,0,0},
             {1,1,1,0},
@@ -132,6 +120,18 @@ constexpr shape_layouts_t TETRIS_SHAPES[SHAPE_TYPE_COUNT]  =
             {0,0,0,0}
         },
         {
+            {0,1,0,0},
+            {0,1,0,0},
+            {0,1,1,0},
+            {0,0,0,0}
+        },
+        {
+            {0,0,1,0},
+            {1,1,1,0},
+            {0,0,0,0},
+            {0,0,0,0}
+        },
+        {
             {1,1,0,0},
             {0,1,0,0},
             {0,1,0,0},
@@ -139,12 +139,12 @@ constexpr shape_layouts_t TETRIS_SHAPES[SHAPE_TYPE_COUNT]  =
         },
     },
 
-    //SHAPE_TYPE_RL
+    //SHAPE_TYPE_J
     {
         {
-            {0,0,0,0},
+            {1,0,0,0},
             {1,1,1,0},
-            {0,0,1,0},
+            {0,0,0,0},
             {0,0,0,0}
         },
         {
@@ -154,9 +154,9 @@ constexpr shape_layouts_t TETRIS_SHAPES[SHAPE_TYPE_COUNT]  =
             {0,0,0,0}
         },
         {
-            {1,0,0,0},
-            {1,1,1,0},
             {0,0,0,0},
+            {1,1,1,0},
+            {0,0,1,0},
             {0,0,0,0}
         },
         {
@@ -174,13 +174,13 @@ constexpr size_t get_layout_count(int shape_type)
 {
     switch(shape_type)
     {
-    case SHAPE_TYPE_LINE: return 2;
+    case SHAPE_TYPE_I: return 2;
     case SHAPE_TYPE_T: return 4;
-    case SHAPE_TYPE_LZ: return 2;
-    case SHAPE_TYPE_RZ: return 2;
-    case SHAPE_TYPE_SQUARE: return 1;
-    case SHAPE_TYPE_LL: return 4;
-    case SHAPE_TYPE_RL: return 4;
+    case SHAPE_TYPE_S: return 2;
+    case SHAPE_TYPE_Z: return 2;
+    case SHAPE_TYPE_O: return 1;
+    case SHAPE_TYPE_L: return 4;
+    case SHAPE_TYPE_J: return 4;
     }
 
     TETRIS_ASSERT(0);
@@ -255,7 +255,7 @@ class default_shape_generator : public shape_generator_t
 public:
     void generate(shape_t& shape)
     {
-        shape.reset(SHAPE_TYPE_SQUARE, static_cast<block_t>(0x808080));
+        shape.reset(SHAPE_TYPE_O, static_cast<block_t>(0x808080));
     }
 };
 static default_shape_generator default_generator;
@@ -396,6 +396,29 @@ int engine::rotate_left()
         return RESULT_NONE;
     Shape = shape;
     return RESULT_CHANGED;
+
+    //TEST: improved rotation
+    // int result{RESULT_NONE};
+    // shape.rotate_left();
+    // if(false == test_shape(shape, ShapePos))
+    // {
+    //     Shape = shape;
+    //     return RESULT_CHANGED;
+    // }
+
+    // point_t test_pos{ShapePos.X - 1, ShapePos.Y};
+    // if(false == test_shape(shape, test_pos))
+    // {
+    //     Shape = shape;
+    //     return RESULT_CHANGED;
+    // }
+    // test_pos = {ShapePos.X + 1, ShapePos.Y};
+    // if(false == test_shape(shape, test_pos))
+    // {
+    //     Shape = shape;
+    //     return RESULT_CHANGED;
+    // }
+    // return RESULT_NONE;
 }
 int engine::rotate_right()
 {
@@ -412,7 +435,7 @@ bool engine::is_solid_line(int y) const
 	if (y < 0 || GAME_FIELD_HEIGHT <= y)
 		return false;
 
-	for (coord_t x = 0; x < GAME_FIELD_WIDTH; ++x)
+    for (int x = 0; x < GAME_FIELD_WIDTH; ++x)
 		if (BLOCK_NONE == Blocks[x][y])
 			return false;
 	return true;

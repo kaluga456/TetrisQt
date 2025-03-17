@@ -4,7 +4,7 @@
 #include <map>
 #include <QDate>
 
-class CBestResults
+class CBestScore
 {
 public:
     using const_iterator = std::map<int, QDate>::const_reverse_iterator;
@@ -42,7 +42,7 @@ public:
     };
     int KeySpeed{DEF_KEYBOARD_SPEED};
 
-    CBestResults BestResults;
+    CBestScore BestResults;
 };
 
 extern COptions Options;
