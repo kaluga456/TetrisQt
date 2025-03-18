@@ -13,6 +13,7 @@
 #include "random.h"
 #include "TetrisEngine.h"
 #include "options.h"
+#include "timer.h"
 #include "MainScene.h"
 
 extern COptions Options;
@@ -31,8 +32,8 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    //shape generator
     void generate(tetris::shape_t& shape) override;
-
 
     //user events
     void keyPressEvent(QKeyEvent* key_event) override;
@@ -52,12 +53,13 @@ private slots:
     void OnExit();
     void OnAbout();
     void teTickTimer();
+    void teClockTimer();
     void teKeyTimer();
 
 private:
     Ui::MainWindow *ui;
 
-    //random value generators
+    //shape generator
     app::random_value<int, 0, tetris::SHAPE_TYPE_COUNT - 1> RandomShape;
     app::random_value<int, 100, 255> RandomColor;
 
@@ -66,22 +68,10 @@ private:
 
     //timers
     QTimer* timerTick;
-    QElapsedTimer* timerElapsed;
+    QTimer* timerClock;
+    CTimeCounter TimeCounter; //total round time
 
     //key timers
-    class QKeyTimer : public QTimer
-    {
-    public:
-        QKeyTimer(QObject *parent = nullptr) : QTimer(parent) {}
-
-        bool Start()
-        {
-            if(isActive())
-                return false;
-            start(Options.KeySpeed);
-            return true;
-        }
-    };
     QKeyTimer* timerMoveLeft{nullptr};
     QKeyTimer* timerMoveRight{nullptr};
     QKeyTimer* timerMoveDown{nullptr};

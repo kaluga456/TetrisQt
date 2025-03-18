@@ -9,16 +9,22 @@ extern MainWindow* MainWnd;
 tetris::engine TetrisGame;
 
 constexpr int MAIN_PADDING = 5;
+constexpr const char* PAUSED_TEXT = "PAUSED";
+constexpr const char* GAME_OVER_TEXT = "GAME OVER";
 
-//#define CUSTOM_DEBUG
-#ifdef CUSTOM_DEBUG
+//debug flags
+#ifdef _DEBUG
+//#define DEBUG_NO_TICKS
+//#define DEBUG_SHAPE
+#ifdef DEBUG_SHAPE
 class debug_shape_generator : public tetris::shape_generator_t
 {
 public:
-    void generate(tetris::shape_t& shape) {shape.reset(tetris::SHAPE_TYPE_J, 0x808080);}
+    void generate(tetris::shape_t& shape) {shape.reset(tetris::SHAPE_TYPE_I, 0x808080);}
 };
 static debug_shape_generator debug_generator;
-#endif
+#endif //DEBUG_SHAPE
+#endif //_DEBUG
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -42,7 +48,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::OnAbout);
 
     //init logic
-#ifdef CUSTOM_DEBUG
+#ifdef DEBUG_SHAPE
     TetrisGame.set_generator(&debug_generator);
 #else
     TetrisGame.set_generator(this);
@@ -82,8 +88,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     //init timers
     timerTick = new QTimer(this);
+    timerClock = new QTimer(this);
     connect(timerTick, &QTimer::timeout, this, &MainWindow::teTickTimer);
-    timerElapsed = new QElapsedTimer();
+    connect(timerClock, &QTimer::timeout, this, &MainWindow::teClockTimer);
+    timerClock->start(1000);
+
     timerMoveLeft = new QKeyTimer(this);
     timerMoveRight = new QKeyTimer(this);
     timerMoveDown = new QKeyTimer(this);
@@ -93,7 +102,7 @@ MainWindow::MainWindow(QWidget *parent)
 }
 MainWindow::~MainWindow()
 {
-    delete timerElapsed;
+    delete timerClock;
     delete timerTick;
 
     delete timerMoveDown;
@@ -110,6 +119,7 @@ void MainWindow::generate(tetris::shape_t& shape)
 }
 void MainWindow::keyPressEvent(QKeyEvent *key_event)
 {
+    //TODO: how to use this?
     //const bool is_repeat = key_event->isAutoRepeat();
 
     switch(key_event->key())
@@ -187,19 +197,16 @@ void MainWindow::keyReleaseEvent(QKeyEvent *key_event)
         break;
     }
 }
-
 void MainWindow::OnTest1()
 {
 }
 void MainWindow::OnTest2()
 {
 }
-
 void MainWindow::OnNewGame()
 {
     SwitchState(GS_RUNNING);
 }
-
 void MainWindow::OnAbout()
 {
     QMessageBox mb;
@@ -209,7 +216,6 @@ void MainWindow::OnAbout()
     mb.setStandardButtons(QMessageBox::Ok);
     mb.exec();
 }
-
 void MainWindow::ueNewGame()
 {
     if(IsGame())
@@ -221,7 +227,6 @@ void MainWindow::ueNewGame()
     }
     SwitchState(GS_RUNNING);
 }
-
 void MainWindow::uePause()
 {
     if(GS_RUNNING == GameState)
@@ -229,7 +234,6 @@ void MainWindow::uePause()
     else if(GS_PAUSED == GameState)
         SwitchState(GS_RUNNING);
 }
-
 void MainWindow::teTickTimer()
 {
     if(false == IsRunning())
@@ -237,6 +241,11 @@ void MainWindow::teTickTimer()
     ProcessResult(TetrisGame.move_down());
 }
 
+void MainWindow::teClockTimer()
+{
+    if(GS_RUNNING == GameState)
+        MainScene->frameScore.SetTime(TimeCounter.time());
+}
 void MainWindow::teKeyTimer()
 {
     if(false == IsRunning())
@@ -257,7 +266,8 @@ void MainWindow::ProcessResult(int engine_result)
     case tetris::RESULT_NONE:
         return;
     case tetris::RESULT_SHAPE:
-        MainScene->SetScore(TetrisGame.get_score());
+        MainScene->frameShape.setShape(TetrisGame.get_next_shape());
+        MainScene->frameScore.SetScore(TetrisGame.get_score());
         break;
     case tetris::RESULT_CHANGED:
         break;
@@ -268,7 +278,7 @@ void MainWindow::ProcessResult(int engine_result)
         Q_ASSERT(0);
         return;
     }
-    MainScene->RePaint();
+    MainScene->frameGame.Repaint();
 }
 void MainWindow::SwitchState(int new_state)
 {
@@ -324,19 +334,29 @@ void MainWindow::SwitchState(int new_state)
 
 void MainWindow::StartNewGame()
 {
-    MainScene->SetText("");
-    MainScene->ResetStat();
     TetrisGame.new_game();
-    MainScene->RePaint();
+    TimeCounter.Start();
+
+    MainScene->frameShape.setShape(TetrisGame.get_next_shape());
+
+    MainScene->frameScore.SetScore(TetrisGame.get_score());
+    MainScene->frameScore.SetSpeed(0);
+    MainScene->frameScore.SetTime(TimeCounter.time());
+
+    MainScene->frameGame.setText();
+    MainScene->frameGame.Repaint();
+
+#ifndef DEBUG_NO_TICKS
     timerTick->start(1000);
+#endif
 }
 void MainWindow::EndGame()
 {
-    MainScene->SetText("GAME OVER");
+    MainScene->frameGame.setText(GAME_OVER_TEXT);
     timerTick->stop();
 
     const int result = TetrisGame.get_score();
-    MainScene->SetScore(result);
+    MainScene->frameScore.SetScore(result);
     if(Options.BestResults.add(result))
         MainScene->UpdateBest();
 }
@@ -350,14 +370,16 @@ void MainWindow::Pause(bool val)
         if(false == val)
             return;
         GameState = GS_PAUSED;
-        MainScene->SetText("PAUSED");
+        MainScene->frameGame.setText(PAUSED_TEXT);
+        TimeCounter.Pause();
     }
     else if(GS_PAUSED == GameState)
     {
         if(true == val)
             return;
         GameState = GS_RUNNING;
-        MainScene->SetText("");
+        MainScene->frameGame.setText();
+        TimeCounter.Pause(false);
     }
 }
 void MainWindow::OnExit()

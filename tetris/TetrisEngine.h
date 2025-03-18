@@ -37,7 +37,7 @@ public:
     void reset(int shape_type, block_t block_type);
 
     //access
-    const shape_matrix_t* GetMatrix() const {return Matrix;}
+    const shape_matrix_t* get_matrix() const {return Matrix;}
     int get_type() const;
     int get_layout() const;
     block_t get_block_type() const {return BlockType;}
@@ -50,7 +50,7 @@ private:
     block_t BlockType;
 };
 
-//random values generator
+//shape generator
 class shape_generator_t
 {
 public:
@@ -107,18 +107,16 @@ public:
     int rotate_right();
 
 private:
-    //random
     shape_generator_t* ShapeGenerator{nullptr};
-
-    //game field
-	block_t Blocks[GAME_FIELD_WIDTH][GAME_FIELD_HEIGHT];
+    block_t Blocks[GAME_FIELD_WIDTH][GAME_FIELD_HEIGHT]; //game field
 
     //shape
     point_t ShapePos;
-    shape_t Shape; //current shape
+    shape_t Shape; //shape on game field
     shape_t NextShape; //next shape
-    int new_shape(); //bring new shape to game field
-    bool test_shape(const shape_t& shape, const point_t& pos);
+    int new_shape(); //place new shape on game field
+    int test_shape(const shape_t& shape, short x_offset = 0, short y_offset = 0);
+    int test_rotation(const shape_t& shape);
 
     //remove lines
     int Score{0}; //removed lines count

@@ -291,7 +291,7 @@ block_t engine::get_shape_block(int x, int y, const shape_t& shape, const point_
     if(y_pos < 0 || SHAPE_MATRIX_SIZE <= y_pos)
         return BLOCK_NONE;
 
-    const shape_matrix_t& matrix = *shape.GetMatrix();
+    const shape_matrix_t& matrix = *shape.get_matrix();
     const block_t matrix_block = matrix[x_pos][y_pos];
 
     return (BLOCK_NONE == matrix_block) ? BLOCK_NONE : shape.get_block_type();
@@ -309,17 +309,16 @@ int engine::new_shape()
     ShapePos.X = GAME_FIELD_WIDTH / 2 - 1;
     ShapePos.Y = 0;
 
-    Shape = NextShape;
-    if(test_shape(Shape, ShapePos))
+    if(RESULT_NONE == test_shape(NextShape))
         return RESULT_GAME_OVER;
 
     ShapeGenerator->generate(NextShape);
     return RESULT_SHAPE;
 }
-bool engine::test_shape(const shape_t& shape, const point_t& pos)
+int engine::test_shape(const shape_t& shape, short x_offset /*= 0*/, short y_offset /*= 0*/)
 {
-    const shape_matrix_t& matrix = *shape.GetMatrix();
-
+    const point_t pos{ShapePos.X + x_offset, ShapePos.Y + y_offset};
+    const shape_matrix_t& matrix = *shape.get_matrix();
     for(int x = 0; x < SHAPE_MATRIX_SIZE; ++x)
     {
         for(int y = 0; y < SHAPE_MATRIX_SIZE; ++y)
@@ -334,48 +333,38 @@ bool engine::test_shape(const shape_t& shape, const point_t& pos)
 
             //test walls
             if(x_pos < 0 || GAME_FIELD_WIDTH <= x_pos)
-                return true;
+                return RESULT_NONE;
 
             //test floor
             if(y_pos >= GAME_FIELD_HEIGHT)
-                return true;
+                return RESULT_NONE;
 
             //test game field blocks
             const block_t field_block = Blocks[x_pos][y_pos];
             if(field_block != BLOCK_NONE)
-                return true;
+                return RESULT_NONE;
         }
     }
 
-    return false;
+    if(&Shape != &shape)
+        Shape = shape;
+    ShapePos = pos;
+    return RESULT_CHANGED;
 }
 int engine::move_left()
 {
-    const point_t test_pos(ShapePos.X - 1, ShapePos.Y);
-    if(test_shape(Shape, test_pos))
-        return RESULT_NONE;
-    ShapePos = test_pos;
-    return RESULT_CHANGED;
+    return test_shape(Shape, -1, 0);
 }
 int engine::move_right()
 {
-    const point_t test_pos(ShapePos.X + 1, ShapePos.Y);
-    if(test_shape(Shape, test_pos))
-        return RESULT_NONE;
-    ShapePos = test_pos;
-    return RESULT_CHANGED;
+    return test_shape(Shape, +1, 0);
 }
-
 int engine::move_down()
 {
-    const point_t test_pos(ShapePos.X, ShapePos.Y + 1);
-    if(test_shape(Shape, test_pos))
-    {
-        insert_shape();
-        return new_shape();
-    }
-    ShapePos = test_pos;
-    return RESULT_CHANGED;
+    if(RESULT_CHANGED == test_shape(Shape, 0, +1))
+        return RESULT_CHANGED;
+    insert_shape();
+    return new_shape();
 }
 int engine::drop()
 {
@@ -392,42 +381,37 @@ int engine::rotate_left()
 {
     shape_t shape(Shape);
     shape.rotate_left();
-    if(test_shape(shape, ShapePos))
-        return RESULT_NONE;
-    Shape = shape;
-    return RESULT_CHANGED;
-
-    //TEST: improved rotation
-    // int result{RESULT_NONE};
-    // shape.rotate_left();
-    // if(false == test_shape(shape, ShapePos))
-    // {
-    //     Shape = shape;
-    //     return RESULT_CHANGED;
-    // }
-
-    // point_t test_pos{ShapePos.X - 1, ShapePos.Y};
-    // if(false == test_shape(shape, test_pos))
-    // {
-    //     Shape = shape;
-    //     return RESULT_CHANGED;
-    // }
-    // test_pos = {ShapePos.X + 1, ShapePos.Y};
-    // if(false == test_shape(shape, test_pos))
-    // {
-    //     Shape = shape;
-    //     return RESULT_CHANGED;
-    // }
-    // return RESULT_NONE;
+    return test_rotation(shape);
 }
 int engine::rotate_right()
 {
     shape_t shape(Shape);
     shape.rotate_right();
-    if(test_shape(shape, ShapePos))
-        return RESULT_NONE;
-    Shape = shape;
-    return RESULT_CHANGED;
+    return test_rotation(shape);
+}
+int engine::test_rotation(const shape_t &shape)
+{
+    //test in place
+    if(RESULT_CHANGED == test_shape(shape))
+        return RESULT_CHANGED;
+
+    //test against left wall
+    if(ShapePos.X < 0)
+    {
+        if(RESULT_CHANGED == test_shape(shape, +1, 0))
+            return RESULT_CHANGED;
+    }
+
+    //test against right wall
+    else if(ShapePos.X + SHAPE_MATRIX_SIZE > GAME_FIELD_WIDTH)
+    {
+        if(RESULT_CHANGED == test_shape(shape, -1, 0))
+            return RESULT_CHANGED;
+        if(RESULT_CHANGED == test_shape(shape, -2, 0))
+            return RESULT_CHANGED;
+    }
+
+    return RESULT_NONE;
 }
 bool engine::is_solid_line(int y) const
 {
@@ -443,7 +427,7 @@ bool engine::is_solid_line(int y) const
 void engine::insert_shape()
 {
     //add shape blocks to game field
-    const shape_matrix_t& matrix = *Shape.GetMatrix();
+    const shape_matrix_t& matrix = *Shape.get_matrix();
     for(int x = 0; x < SHAPE_MATRIX_SIZE; ++x)
     {
         for(int y = 0; y < SHAPE_MATRIX_SIZE; ++y)
