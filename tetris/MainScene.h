@@ -93,6 +93,20 @@ private:
     QGraphicsSimpleTextItem* Text{nullptr};
 };
 
+//TODO: game field grid
+class CGSGrid
+{
+public:
+    CGSGrid() {}
+
+    void Init(QGraphicsScene* parent, const QRectF& rect);
+
+private:
+    QGraphicsScene* Parent{nullptr};
+    QGraphicsLineItem* XLines[tetris::GAME_FIELD_WIDTH + 1];
+    QGraphicsLineItem* YLines[tetris::GAME_FIELD_HEIGHT + 1];
+};
+
 class QMainScene : public QGraphicsScene
 {
     Q_OBJECT
@@ -112,6 +126,8 @@ public:
     CGSScore frameScore;
     CGSText frameBest;
     CGSText frameHelp;
+
+    CGSGrid Grid;
 
 private:
 };

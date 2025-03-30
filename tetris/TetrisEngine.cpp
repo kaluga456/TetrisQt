@@ -14,7 +14,7 @@ using namespace tetris;
 
 //all shapes matrices
 using shape_layouts_t = shape_matrix_t[SHAPE_LAYOUT_COUNT];
-constexpr shape_layouts_t TETRIS_SHAPES[SHAPE_TYPE_COUNT]  =
+constexpr shape_layouts_t TETRIS_SHAPES[]  =
 {
     //SHAPE_TYPE_I
     {
@@ -30,8 +30,18 @@ constexpr shape_layouts_t TETRIS_SHAPES[SHAPE_TYPE_COUNT]  =
             {0,1,0,0},
             {0,1,0,0}
         },
-        {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}},
-        {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}}
+        {
+            {0,0,0,0},
+            {1,1,1,1},
+            {0,0,0,0},
+            {0,0,0,0}
+        },
+        {
+            {0,1,0,0},
+            {0,1,0,0},
+            {0,1,0,0},
+            {0,1,0,0}
+        }
     },
 
     //SHAPE_TYPE_T
@@ -76,8 +86,18 @@ constexpr shape_layouts_t TETRIS_SHAPES[SHAPE_TYPE_COUNT]  =
             {0,0,1,0},
             {0,0,0,0}
         },
-        {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}},
-        {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}}
+        {
+            {0,0,0,0},
+            {0,1,1,0},
+            {1,1,0,0},
+            {0,0,0,0}
+        },
+        {
+            {0,1,0,0},
+            {0,1,1,0},
+            {0,0,1,0},
+            {0,0,0,0}
+        }
     },
 
     //SHAPE_TYPE_Z
@@ -94,8 +114,18 @@ constexpr shape_layouts_t TETRIS_SHAPES[SHAPE_TYPE_COUNT]  =
             {0,1,0,0},
             {0,0,0,0}
         },
-        {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}},
-        {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}}
+        {
+            {0,0,0,0},
+            {1,1,0,0},
+            {0,1,1,0},
+            {0,0,0,0}
+        },
+        {
+            {0,0,1,0},
+            {0,1,1,0},
+            {0,1,0,0},
+            {0,0,0,0}
+        }
     },
 
     //SHAPE_TYPE_O
@@ -106,9 +136,24 @@ constexpr shape_layouts_t TETRIS_SHAPES[SHAPE_TYPE_COUNT]  =
             {0,0,0,0},
             {0,0,0,0}
         },
-        {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}},
-        {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}},
-        {{0,0,0,0}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}}
+        {
+            {1,1,0,0},
+            {1,1,0,0},
+            {0,0,0,0},
+            {0,0,0,0}
+        },
+        {
+            {1,1,0,0},
+            {1,1,0,0},
+            {0,0,0,0},
+            {0,0,0,0}
+        },
+        {
+            {1,1,0,0},
+            {1,1,0,0},
+            {0,0,0,0},
+            {0,0,0,0}
+        }
     },
 
     //SHAPE_TYPE_L
@@ -170,45 +215,22 @@ constexpr shape_layouts_t TETRIS_SHAPES[SHAPE_TYPE_COUNT]  =
 
 static_assert(SHAPE_TYPE_COUNT == sizeof(TETRIS_SHAPES) / sizeof(shape_layouts_t));
 
-constexpr size_t get_layout_count(int shape_type)
-{
-    switch(shape_type)
-    {
-    case SHAPE_TYPE_I: return 2;
-    case SHAPE_TYPE_T: return 4;
-    case SHAPE_TYPE_S: return 2;
-    case SHAPE_TYPE_Z: return 2;
-    case SHAPE_TYPE_O: return 1;
-    case SHAPE_TYPE_L: return 4;
-    case SHAPE_TYPE_J: return 4;
-    }
-
-    TETRIS_ASSERT(0);
-    return 0;
-}
-
 shape_t::shape_t() : Matrix{TETRIS_SHAPES[0]}
 {
 }
-
-shape_t::shape_t(const shape_t &rop) :
-    Matrix{rop.Matrix},
-    BlockType{rop.BlockType}
+shape_t::shape_t(const shape_t &rop) : Matrix{rop.Matrix}, BlockType{rop.BlockType}
 {
 }
-shape_t::shape_t(int shape_type) :
-    Matrix{&TETRIS_SHAPES[shape_type][0]}
+shape_t::shape_t(int shape_type) : Matrix{&TETRIS_SHAPES[shape_type][0]}
 {
     TETRIS_ASSERT(0 <= shape_type && shape_type < SHAPE_TYPE_COUNT);
 }
-
 shape_t &shape_t::operator=(const shape_t &rop)
 {
     Matrix = rop.Matrix;
     BlockType = rop.BlockType;
     return *this;
 }
-
 void shape_t::reset(int shape_type, block_t block_type)
 {
     Matrix = &TETRIS_SHAPES[shape_type][0];
@@ -231,10 +253,9 @@ int shape_t::get_layout() const
 void shape_t::rotate_left()
 {
     const int type = get_type();
-    const size_t layout_count = get_layout_count(type);
     int layout = get_layout();
     ++layout;
-    if(layout >= layout_count)
+    if(layout >= SHAPE_LAYOUT_COUNT)
         layout = 0;
     Matrix = &TETRIS_SHAPES[type][layout];
 }
@@ -242,11 +263,10 @@ void shape_t::rotate_left()
 void shape_t::rotate_right()
 {
     const int type = get_type();
-    const int layout_count = get_layout_count(type);
     int layout = get_layout();
     --layout;
     if(layout < 0)
-        layout = layout_count - 1;
+        layout = SHAPE_LAYOUT_COUNT - 1;
     Matrix = &TETRIS_SHAPES[type][layout];
 }
 
@@ -473,3 +493,4 @@ void engine::remove_line(int line_y)
         }
 	}
 }
+

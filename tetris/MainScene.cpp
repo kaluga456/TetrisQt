@@ -1,13 +1,14 @@
 #include <string>
 #include <format>
 #include <QtAssert>
+#include <QTextStream>
 #include "about.h"
 #include "options.h"
 #include "MainScene.h"
 #include "TetrisEngine.h"
 
 //sizes and colors
-constexpr qreal BLOCK_SIZE = 20;
+constexpr qreal BLOCK_SIZE = 24;
 constexpr qreal GAME_FIELD_WIDTH = BLOCK_SIZE * tetris::GAME_FIELD_WIDTH;
 constexpr qreal GAME_FIELD_HEIGHT = BLOCK_SIZE * tetris::GAME_FIELD_HEIGHT;
 
@@ -129,24 +130,38 @@ void CGSScore::Init(const QFont &font, QColor color, qreal padding)
 void CGSScore::SetScore(int val)
 {
     Q_ASSERT(textScore);
+
     constexpr const char* fs =      "Score\t  {:8d}\n";
     std::string text = std::format(fs, val);
     textScore->setText(text.c_str());
+
+    //TEST:
+    // QString str;
+    // QTextStream ts(&str);
+    // ts << "Score" << qSetFieldWidth(17) << val;
+    // textScore->setText(str);
 }
 void CGSScore::SetSpeed(int val)
 {
     Q_ASSERT(textSpeed);
+
     constexpr const char* fs =      "Speed\t  {:7d}%\n";
     std::string text = std::format(fs, val);
     textSpeed->setText(text.c_str());
+
+    //TEST:
+    // QString str;
+    // QTextStream ts(&str);
+    // ts << "Speed" << qSetFieldWidth(16) << val << qSetFieldWidth(0) << "%";
+    // textSpeed->setText(str);
 }
 void CGSScore::SetTime(int val)
 {
     Q_ASSERT(textTime);
 
     std::string text;
-    constexpr const char* fs_def =  "Time\t  --:--:--\n";
-    constexpr const char* fs =      "Time\t  {:02d}:{:02d}:{:02d}\n";
+    constexpr const char* fs_def =  "Time\t  --:--:--";
+    constexpr const char* fs =      "Time\t  {:02d}:{:02d}:{:02d}";
     if(0 == val)
     {
         textTime->setText(fs_def);
@@ -159,6 +174,24 @@ void CGSScore::SetTime(int val)
     const int sec = secs % 60;
     text = std::format(fs, hour, min, sec);
     textTime->setText(text.c_str());
+
+    //TEST:
+    // QString str;
+    // QString tstr;
+    // QTextStream ts(&str);
+    // QTextStream tts(&tstr);
+    // if(0 == val)
+    //     tts << "--:--:--";
+    // else
+    // {
+    //     tts << qSetFieldWidth(2) << qSetPadChar('0') << hour;
+    //     tts << qSetFieldWidth(1)  << ":";
+    //     tts << qSetFieldWidth(2) << qSetPadChar('0') << min;
+    //     tts << qSetFieldWidth(1)  << ":";
+    //     tts << qSetFieldWidth(2) << qSetPadChar('0') << sec;
+    // }
+    // ts << "Time" << qSetFieldWidth(18) << tstr;
+    // textTime->setText(str);
 }
 
 void CGSShape::Init()
@@ -215,6 +248,7 @@ void CGSShape::setShape(const tetris::shape_t &shape)
 
 void CGSGame::Init()
 {
+    constexpr qreal BLOCK_PADDING = 2;
     const QPen no_pen{Qt::PenStyle::NoPen};
 
     //init blocks
@@ -222,22 +256,26 @@ void CGSGame::Init()
     {
         for(int y = 0; y < tetris::GAME_FIELD_HEIGHT; ++y)
         {
-            QRectF rect{MAIN_WALL_PAD + Rect.left() + BLOCK_SIZE * x,
+            QRectF rect{Rect.left() + BLOCK_SIZE * x,
                         Rect.top() + BLOCK_SIZE * y,
-                        BLOCK_SIZE - MAIN_BLOCK_PAD,
-                        BLOCK_SIZE - MAIN_BLOCK_PAD};
+                        BLOCK_SIZE,
+                        BLOCK_SIZE};
+            rect.adjust(BLOCK_PADDING, BLOCK_PADDING, -BLOCK_PADDING, -BLOCK_PADDING);
+
             QGraphicsRectItem* gi = Parent->addRect(rect, no_pen);
             gi->hide();
+            gi->setZValue(2);
             Blocks[x][y] = gi;
             Context[x][y] = tetris::BLOCK_NONE;
         }
     }
 
     //init text
-    QFont text_font{"Lucida Console", 20, QFont::Bold};
+    QFont text_font{"Trebuchet MS", 24, QFont::Bold};
     Text = Parent->addSimpleText("", text_font);
     Text->setBrush(QBrush{MAIN_TEXT_COLOR});
     Text->setPen(QPen{Qt::black});
+    Text->setZValue(4);
 }
 void CGSGame::Repaint()
 {
@@ -268,21 +306,41 @@ void CGSGame::setText(const char* text /*= nullptr*/)
     QRectF text_rect = Text->boundingRect();
     Text->setPos(QPointF{(Rect.width() - text_rect.width()) / 2, (Rect.height() - text_rect.height()) / 2});
 }
+void CGSGrid::Init(QGraphicsScene *parent, const QRectF &rect)
+{
+    Parent = parent;
 
+    const qreal cell_size = rect.width() / tetris::GAME_FIELD_WIDTH;
+    QPen pen{QColor(80,80,80)};
+    for(int y = 0; y < tetris::GAME_FIELD_WIDTH + 1; ++y)
+    {
+        QLineF line{rect.left() + y * cell_size, rect.top(), y * cell_size, rect.bottom()};
+        QGraphicsLineItem* gi = Parent->addLine(line, pen);
+        gi->setZValue(1);
+        YLines[y] = gi;
+    }
+    for(int x = 0; x < tetris::GAME_FIELD_HEIGHT + 1; ++x)
+    {
+        QLineF line{rect.left(), x * cell_size, rect.right(), x * cell_size};
+        QGraphicsLineItem* gi = Parent->addLine(line, pen);
+        gi->setZValue(1);
+        YLines[x] = gi;
+    }
+
+}
 QMainScene::QMainScene(QObject *parent) : QGraphicsScene{parent}
 {
 }
 void QMainScene::Init()
 {
-    QRectF game_field_rect {MAIN_WALL_PAD, MAIN_WALL_PAD, GAME_FIELD_WIDTH, GAME_FIELD_HEIGHT};
-    QRectF rect = {0, 0,
-                    MAIN_WALL_PAD + game_field_rect.width() + MAIN_WALL_PAD,
-                    MAIN_WALL_PAD + game_field_rect.height() + MAIN_WALL_PAD};
-    frameGame.InitRect(this, rect, MAIN_BG_COLOR);
+    QRectF game_field_rect {0, 0, GAME_FIELD_WIDTH, GAME_FIELD_HEIGHT};
+    frameGame.InitRect(this, game_field_rect, MAIN_BG_COLOR);
     frameGame.Init();
 
+    Grid.Init(this, frameGame.rect());
+
     //shape view
-    rect = {frameGame.rect().right() + HORZ_DEL_SIZE, 0, STAT_WIDTH, 100};
+    QRectF rect = {frameGame.rect().right() + HORZ_DEL_SIZE, 0, STAT_WIDTH, 100};
     frameShape.InitRect(this, rect, MAIN_BG_COLOR);
     frameShape.Init();
 
@@ -304,7 +362,7 @@ void QMainScene::Init()
     frameHelp.InitRect(this, rect, MAIN_BG_COLOR);
     frameHelp.Init(stat_font, STAT_TEXT_COLOR, STAT_PAD);
     frameHelp.setText(APP_HELP);
-    frameHelp.UpdateHeight();
+    frameHelp.setHeight(frameGame.rect().bottom() - rect.top());
 }
 void QMainScene::ResetStat()
 {
