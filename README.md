@@ -1,2 +1,3 @@
 
-![mainwnd1](https://github.com/user-attachments/assets/aea43ad9-291b-4ceb-9383-785f454da117)
+![mainwnd2](https://github.com/user-attachments/assets/3572b9fe-a89e-45cd-ab4b-b0734bafba1d)
+
