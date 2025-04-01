@@ -29,7 +29,6 @@ bool CBestScore::add(int result, const QDate &date)
 
     return false;
 }
-
 COptions::COptions()
 {
     QCoreApplication::setOrganizationDomain(APP_URL);
@@ -42,6 +41,8 @@ void COptions::Load()
 
     LayoutLeft = settings.value("LayoutLeft", 200).toInt();
     LayoutTop = settings.value("LayoutTop", 300).toInt();
+
+    ShowGrid = settings.value("ShowGrid", true).toBool();
 
     //best results
     const int size = settings.beginReadArray("scores");
@@ -60,6 +61,8 @@ void COptions::Save()
 
     settings.setValue("LayoutLeft", LayoutLeft);
     settings.setValue("LayoutTop", LayoutTop);
+
+    settings.setValue("ShowGrid", ShowGrid);
 
     //best results
     settings.beginWriteArray("scores");

@@ -99,12 +99,17 @@ class CGSGrid
 public:
     CGSGrid() {}
 
-    void Init(QGraphicsScene* parent, const QRectF& rect);
+    void Init(QGraphicsScene* parent, const QRectF& rect, bool show_grid = true);
+
+    void Show(bool val);
+    void Show(); //switch
+
+    bool isVisible() const {return ShowGrid;}
 
 private:
+    bool ShowGrid{true};
     QGraphicsScene* Parent{nullptr};
-    QGraphicsLineItem* XLines[tetris::GAME_FIELD_WIDTH + 1];
-    QGraphicsLineItem* YLines[tetris::GAME_FIELD_HEIGHT + 1];
+    QGraphicsLineItem* YLines[tetris::GAME_FIELD_HEIGHT + tetris::GAME_FIELD_WIDTH + 2];
 };
 
 class QMainScene : public QGraphicsScene

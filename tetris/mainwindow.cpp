@@ -38,6 +38,7 @@ MainWindow::MainWindow(QWidget *parent)
     //main window
     ui->statusbar->setVisible(false);
     setStatusBar(nullptr);
+    setWindowIcon(QIcon(":/res/AppIcon.ico"));
     setWindowTitle(APP_FULL_NAME);
     const Qt::WindowFlags wnd_flags = windowFlags();
     setWindowFlags(wnd_flags | Qt::Dialog | Qt::MSWindowsFixedSizeDialogHint);
@@ -168,6 +169,11 @@ void MainWindow::keyPressEvent(QKeyEvent *key_event)
     case Qt::Key::Key_Space:
         if(IsRunning())
             ProcessResult(TetrisGame.drop());
+        break;
+
+    //show/hide grid
+    case Qt::Key_G:
+        MainScene->Grid.Show();
         break;
 
     //TEST:
@@ -397,6 +403,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     QPoint p = pos();
     Options.LayoutLeft = p.x();
     Options.LayoutTop = p.y();
+    Options.ShowGrid = MainScene->Grid.isVisible();
     Options.BestResults.add(TetrisGame.get_score());
     Options.Save();
 

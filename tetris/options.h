@@ -33,6 +33,8 @@ public:
     int LayoutLeft;
     int LayoutTop;
 
+    bool ShowGrid{true};
+
     //keyboard timer
     enum : int
     {

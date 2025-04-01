@@ -8,7 +8,7 @@
 #include "TetrisEngine.h"
 
 //sizes and colors
-constexpr qreal BLOCK_SIZE = 24;
+constexpr qreal BLOCK_SIZE = 20;
 constexpr qreal GAME_FIELD_WIDTH = BLOCK_SIZE * tetris::GAME_FIELD_WIDTH;
 constexpr qreal GAME_FIELD_HEIGHT = BLOCK_SIZE * tetris::GAME_FIELD_HEIGHT;
 
@@ -306,27 +306,43 @@ void CGSGame::setText(const char* text /*= nullptr*/)
     QRectF text_rect = Text->boundingRect();
     Text->setPos(QPointF{(Rect.width() - text_rect.width()) / 2, (Rect.height() - text_rect.height()) / 2});
 }
-void CGSGrid::Init(QGraphicsScene *parent, const QRectF &rect)
+void CGSGrid::Init(QGraphicsScene *parent, const QRectF &rect, bool show_grid /*= true*/)
 {
     Parent = parent;
+    ShowGrid = show_grid;
 
     const qreal cell_size = rect.width() / tetris::GAME_FIELD_WIDTH;
     QPen pen{QColor(80,80,80)};
     for(int y = 0; y < tetris::GAME_FIELD_WIDTH + 1; ++y)
     {
         QLineF line{rect.left() + y * cell_size, rect.top(), y * cell_size, rect.bottom()};
-        QGraphicsLineItem* gi = Parent->addLine(line, pen);
-        gi->setZValue(1);
-        YLines[y] = gi;
+        YLines[y] = Parent->addLine(line, pen);
+        if(false == ShowGrid)
+            YLines[y]->hide();
+        YLines[y]->setZValue(1);
     }
     for(int x = 0; x < tetris::GAME_FIELD_HEIGHT + 1; ++x)
     {
         QLineF line{rect.left(), x * cell_size, rect.right(), x * cell_size};
-        QGraphicsLineItem* gi = Parent->addLine(line, pen);
-        gi->setZValue(1);
-        YLines[x] = gi;
+        YLines[tetris::GAME_FIELD_WIDTH + 1 + x] = Parent->addLine(line, pen);
+        if(false == ShowGrid)
+            YLines[tetris::GAME_FIELD_WIDTH + 1 + x]->hide();
+        YLines[tetris::GAME_FIELD_WIDTH + 1 + x]->setZValue(1);
     }
-
+}
+void CGSGrid::Show(bool val)
+{
+    if(ShowGrid == val)
+        return;
+    ShowGrid = val;
+    for(int y = 0; y < tetris::GAME_FIELD_WIDTH + 1; ++y)
+        YLines[y]->setVisible(ShowGrid);
+    for(int x = 0; x < tetris::GAME_FIELD_HEIGHT + 1; ++x)
+        YLines[tetris::GAME_FIELD_WIDTH + 1 + x]->setVisible(ShowGrid);
+}
+void CGSGrid::Show()
+{
+    Show(!ShowGrid);
 }
 QMainScene::QMainScene(QObject *parent) : QGraphicsScene{parent}
 {
@@ -337,7 +353,7 @@ void QMainScene::Init()
     frameGame.InitRect(this, game_field_rect, MAIN_BG_COLOR);
     frameGame.Init();
 
-    Grid.Init(this, frameGame.rect());
+    Grid.Init(this, frameGame.rect(), Options.ShowGrid);
 
     //shape view
     QRectF rect = {frameGame.rect().right() + HORZ_DEL_SIZE, 0, STAT_WIDTH, 100};
