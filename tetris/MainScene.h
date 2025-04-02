@@ -10,7 +10,7 @@
 constexpr int BLOCK_VIEW_SIZE = 30;
 constexpr int GAME_FIELD_VIEW_WIDTH = (BLOCK_VIEW_SIZE * tetris::GAME_FIELD_WIDTH);
 constexpr int GAME_FIELD_VIEW_HEIGHT = (BLOCK_VIEW_SIZE * tetris::GAME_FIELD_HEIGHT);
-
+//////////////////////////////////////////////////////////////////////////////
 //rectangle area in QGraphicsScene
 class CGSRect
 {
@@ -28,7 +28,7 @@ protected:
     QGraphicsScene* Parent{nullptr};
     QGraphicsRectItem* Background{nullptr};
 };
-
+//////////////////////////////////////////////////////////////////////////////
 class CGSText : public CGSRect
 {
 public:
@@ -45,7 +45,7 @@ protected:
     QGraphicsSimpleTextItem* Text{nullptr};
     qreal Padding{0};
 };
-
+//////////////////////////////////////////////////////////////////////////////
 //current game stats
 class CGSScore : public CGSRect
 {
@@ -62,7 +62,7 @@ private:
     QGraphicsSimpleTextItem* textSpeed{nullptr};
     QGraphicsSimpleTextItem* textTime{nullptr};
 };
-
+//////////////////////////////////////////////////////////////////////////////
 //next shape view
 class CGSShape : public CGSRect
 {
@@ -76,7 +76,7 @@ private:
     QGraphicsRectItem* Blocks[tetris::SHAPE_BLOCKS_COUNT];
     QGraphicsRectItem* Matrix[tetris::SHAPE_MATRIX_SIZE][tetris::SHAPE_MATRIX_SIZE];
 };
-
+//////////////////////////////////////////////////////////////////////////////
 //game field
 class CGSGame : public CGSRect
 {
@@ -92,8 +92,7 @@ private:
     tetris::block_t Context[tetris::GAME_FIELD_WIDTH][tetris::GAME_FIELD_HEIGHT];
     QGraphicsSimpleTextItem* Text{nullptr};
 };
-
-//TODO: game field grid
+//////////////////////////////////////////////////////////////////////////////
 class CGSGrid
 {
 public:
@@ -111,7 +110,7 @@ private:
     QGraphicsScene* Parent{nullptr};
     QGraphicsLineItem* YLines[tetris::GAME_FIELD_HEIGHT + tetris::GAME_FIELD_WIDTH + 2];
 };
-
+//////////////////////////////////////////////////////////////////////////////
 class QMainScene : public QGraphicsScene
 {
     Q_OBJECT
@@ -136,5 +135,5 @@ public:
 
 private:
 };
-
+//////////////////////////////////////////////////////////////////////////////
 #endif // MAINSCENE_H

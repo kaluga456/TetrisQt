@@ -6,7 +6,7 @@
 #include "options.h"
 
 COptions Options;
-
+//////////////////////////////////////////////////////////////////////////////
 bool CBestScore::add(int result)
 {
     return add(result, QDate().currentDate());
@@ -29,6 +29,7 @@ bool CBestScore::add(int result, const QDate &date)
 
     return false;
 }
+//////////////////////////////////////////////////////////////////////////////
 COptions::COptions()
 {
     QCoreApplication::setOrganizationDomain(APP_URL);
@@ -75,5 +76,4 @@ void COptions::Save()
     }
     settings.endArray();
 }
-
-
+//////////////////////////////////////////////////////////////////////////////

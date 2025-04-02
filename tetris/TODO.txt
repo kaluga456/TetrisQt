@@ -1,0 +1,6 @@
+TODO:
++ speed boost
+- center next shape view
+
+BUG:
+- adding new best score

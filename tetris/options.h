@@ -3,7 +3,7 @@
 
 #include <map>
 #include <QDate>
-
+//////////////////////////////////////////////////////////////////////////////
 class CBestScore
 {
 public:
@@ -20,7 +20,7 @@ public:
 private:
     std::map<int, QDate> Results;
 };
-
+//////////////////////////////////////////////////////////////////////////////
 class COptions
 {
 public:
@@ -35,7 +35,7 @@ public:
 
     bool ShowGrid{true};
 
-    //keyboard timer
+    //TODO: keyboard timer
     enum : int
     {
         MIN_KEYBOARD_SPEED = 75,
@@ -46,7 +46,7 @@ public:
 
     CBestScore BestResults;
 };
-
+//////////////////////////////////////////////////////////////////////////////
 extern COptions Options;
 
 #endif // OPTIONS_H

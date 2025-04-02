@@ -11,7 +11,7 @@ tetris::engine TetrisGame;
 constexpr int MAIN_PADDING = 5;
 constexpr const char* PAUSED_TEXT = "PAUSED";
 constexpr const char* GAME_OVER_TEXT = "GAME OVER";
-
+//////////////////////////////////////////////////////////////////////////////
 //debug flags
 #ifdef _DEBUG
 //#define DEBUG_NO_TICKS
@@ -25,7 +25,7 @@ public:
 static debug_shape_generator debug_generator;
 #endif //DEBUG_SHAPE
 #endif //_DEBUG
-
+//////////////////////////////////////////////////////////////////////////////
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -88,9 +88,8 @@ MainWindow::MainWindow(QWidget *parent)
         );
 
     //init timers
-    timerTick = new QTimer(this);
     timerClock = new QTimer(this);
-    connect(timerTick, &QTimer::timeout, this, &MainWindow::teTickTimer);
+    connect(&timerTick, &QTimer::timeout, this, &MainWindow::teTickTimer);
     connect(timerClock, &QTimer::timeout, this, &MainWindow::teClockTimer);
     timerClock->start(1000);
 
@@ -104,7 +103,6 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete timerClock;
-    delete timerTick;
 
     delete timerMoveDown;
     delete timerMoveRight;
@@ -120,9 +118,7 @@ void MainWindow::generate(tetris::shape_t& shape)
 }
 void MainWindow::keyPressEvent(QKeyEvent *key_event)
 {
-    //TODO: how to use this?
-    //const bool is_repeat = key_event->isAutoRepeat();
-
+    //game
     switch(key_event->key())
     {
     case Qt::Key::Key_Return:
@@ -176,6 +172,7 @@ void MainWindow::keyPressEvent(QKeyEvent *key_event)
         MainScene->Grid.Show();
         break;
 
+#ifdef _DEBUG
     //TEST:
     case Qt::Key::Key_1:
         OnTest1();
@@ -183,6 +180,7 @@ void MainWindow::keyPressEvent(QKeyEvent *key_event)
     case Qt::Key::Key_2:
         OnTest2();
         break;
+#endif //_DEBUG
     }
 }
 void MainWindow::keyReleaseEvent(QKeyEvent *key_event)
@@ -203,12 +201,14 @@ void MainWindow::keyReleaseEvent(QKeyEvent *key_event)
         break;
     }
 }
+#ifdef _DEBUG
 void MainWindow::OnTest1()
 {
 }
 void MainWindow::OnTest2()
 {
 }
+#endif //_DEBUG
 void MainWindow::OnNewGame()
 {
     SwitchState(GS_RUNNING);
@@ -245,12 +245,19 @@ void MainWindow::teTickTimer()
     if(false == IsRunning())
         return;
     ProcessResult(TetrisGame.move_down());
+#ifndef DEBUG_NO_TICKS
+    timerTick.OnTick();
+#endif
 }
-
 void MainWindow::teClockTimer()
 {
     if(GS_RUNNING == GameState)
-        MainScene->frameScore.SetTime(TimeCounter.time());
+    {
+        const int round_time = TimeCounter.time();
+        if(timerTick.BoostUp(round_time))
+            MainScene->frameScore.SetSpeed(timerTick.GetSpeed());
+        MainScene->frameScore.SetTime(round_time);
+    }
 }
 void MainWindow::teKeyTimer()
 {
@@ -353,13 +360,13 @@ void MainWindow::StartNewGame()
     MainScene->frameGame.Repaint();
 
 #ifndef DEBUG_NO_TICKS
-    timerTick->start(1000);
+    timerTick.Start();
 #endif
 }
 void MainWindow::EndGame()
 {
     MainScene->frameGame.setText(GAME_OVER_TEXT);
-    timerTick->stop();
+    timerTick.stop();
 
     const int result = TetrisGame.get_score();
     MainScene->frameScore.SetScore(result);
@@ -434,4 +441,4 @@ bool MainWindow::QueryEndGame()
 
     return result;
 }
-
+//////////////////////////////////////////////////////////////////////////////

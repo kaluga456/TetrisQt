@@ -67,8 +67,9 @@ private:
     QMainScene* MainScene;
 
     //timers
-    QTimer* timerTick;
+    //QTimer* timerTick;
     QTimer* timerClock;
+    QTickTimer timerTick;
     CTimeCounter TimeCounter; //total round time
 
     //key timers

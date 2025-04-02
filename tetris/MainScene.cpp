@@ -27,35 +27,7 @@ constexpr QColor STAT_BG_COLOR = QColor{32, 32, 32};
 constexpr QColor STAT_TEXT_COLOR = QColor{200,200,200};
 
 extern tetris::engine TetrisGame;
-
-static void get_shape_size(const tetris::shape_matrix_t& matrix, int& width, int& height)
-{
-    width = 0;
-    height = 0;
-
-    for(int x = 0; x < tetris::SHAPE_MATRIX_SIZE; ++x)
-    {
-        int count_y = 0;
-        bool has_x = false;
-        count_y = 0;
-        for(int y = 0; y < tetris::SHAPE_MATRIX_SIZE; ++y)
-        {
-            if(tetris::BLOCK_NONE == matrix[x][y])
-                continue;
-
-            if(false == has_x)
-            {
-                has_x = true;
-                ++width;
-            }
-            ++count_y;
-        }
-
-        if(height < count_y)
-            height = count_y;
-    }
-}
-
+//////////////////////////////////////////////////////////////////////////////
 void CGSRect::InitRect(QGraphicsScene *parent, const QRectF &rect, QColor bg_color)
 {
     Q_ASSERT(parent);
@@ -76,7 +48,7 @@ void CGSRect::setHeight(qreal height)
     Rect.setHeight(height);
     Background->setRect(Rect);
 }
-
+//////////////////////////////////////////////////////////////////////////////
 void CGSText::Init(const QFont& font, QColor color, qreal padding)
 {
     Q_ASSERT(nullptr == Text);
@@ -103,7 +75,7 @@ void CGSText::UpdateHeight()
     Q_ASSERT(Text);
     setHeight(Padding + Text->boundingRect().height() + Padding);
 }
-
+//////////////////////////////////////////////////////////////////////////////
 void CGSScore::Init(const QFont &font, QColor color, qreal padding)
 {
     Q_ASSERT(nullptr == textScore);
@@ -126,7 +98,6 @@ void CGSScore::Init(const QFont &font, QColor color, qreal padding)
 
     setHeight(2*padding + 3*line_height);
 }
-
 void CGSScore::SetScore(int val)
 {
     Q_ASSERT(textScore);
@@ -134,12 +105,6 @@ void CGSScore::SetScore(int val)
     constexpr const char* fs =      "Score\t  {:8d}\n";
     std::string text = std::format(fs, val);
     textScore->setText(text.c_str());
-
-    //TEST:
-    // QString str;
-    // QTextStream ts(&str);
-    // ts << "Score" << qSetFieldWidth(17) << val;
-    // textScore->setText(str);
 }
 void CGSScore::SetSpeed(int val)
 {
@@ -148,12 +113,6 @@ void CGSScore::SetSpeed(int val)
     constexpr const char* fs =      "Speed\t  {:7d}%\n";
     std::string text = std::format(fs, val);
     textSpeed->setText(text.c_str());
-
-    //TEST:
-    // QString str;
-    // QTextStream ts(&str);
-    // ts << "Speed" << qSetFieldWidth(16) << val << qSetFieldWidth(0) << "%";
-    // textSpeed->setText(str);
 }
 void CGSScore::SetTime(int val)
 {
@@ -174,78 +133,81 @@ void CGSScore::SetTime(int val)
     const int sec = secs % 60;
     text = std::format(fs, hour, min, sec);
     textTime->setText(text.c_str());
-
-    //TEST:
-    // QString str;
-    // QString tstr;
-    // QTextStream ts(&str);
-    // QTextStream tts(&tstr);
-    // if(0 == val)
-    //     tts << "--:--:--";
-    // else
-    // {
-    //     tts << qSetFieldWidth(2) << qSetPadChar('0') << hour;
-    //     tts << qSetFieldWidth(1)  << ":";
-    //     tts << qSetFieldWidth(2) << qSetPadChar('0') << min;
-    //     tts << qSetFieldWidth(1)  << ":";
-    //     tts << qSetFieldWidth(2) << qSetPadChar('0') << sec;
-    // }
-    // ts << "Time" << qSetFieldWidth(18) << tstr;
-    // textTime->setText(str);
 }
+//////////////////////////////////////////////////////////////////////////////
+static void GetShapeRect(const tetris::shape_matrix_t& matrix, QRect& rect)
+{
+    rect.setLeft(tetris::SHAPE_MATRIX_SIZE - 1);
+    rect.setTop(tetris::SHAPE_MATRIX_SIZE - 1);
+    rect.setRight(0);
+    rect.setBottom(0);
+    for(int x = 0; x < tetris::SHAPE_MATRIX_SIZE; ++x)
+    {
+        for(int y = 0; y < tetris::SHAPE_MATRIX_SIZE; ++y)
+        {
+            if(tetris::BLOCK_NONE == matrix[x][y])
+                continue;
 
+            if(rect.left() > x)
+                rect.setLeft(x);
+            if(rect.top() > y)
+                rect.setTop(y);
+            if(rect.right() < x)
+                rect.setRight(x);
+            if(rect.bottom() < y)
+                rect.setBottom(y);
+        }
+    }
+}
 void CGSShape::Init()
 {
-    const qreal padding = 5;
-    const qreal shape_size = Rect.height() - 2 * padding;
-    const qreal block_size = shape_size / tetris::SHAPE_MATRIX_SIZE;
+    const qreal block_size = BLOCK_SIZE;
 
     const QPen no_pen{Qt::PenStyle::NoPen};
     for(int block_index = 0; block_index < tetris::SHAPE_BLOCKS_COUNT; ++block_index)
     {
-        QRectF rect{Rect.left(), Rect.top(), block_size - MAIN_BLOCK_PAD, block_size - MAIN_BLOCK_PAD};
-        QGraphicsRectItem* gi = Parent->addRect(rect, no_pen);
-        gi->hide();
-        Blocks[block_index] = gi;
+        QRectF rect{Rect.left(),
+                    Rect.top(),
+                    block_size,
+                    block_size};
+        const int pad = 2;
+        rect.adjust(pad, pad, -pad, -pad);
+
+        Blocks[block_index] = Parent->addRect(rect, no_pen);
+        Blocks[block_index]->hide();
     }
 }
 void CGSShape::setShape(const tetris::shape_t &shape)
 {
     const qreal padding = 5;
-    const qreal shape_size = Rect.height() - 2 * padding;
-    const qreal block_size = shape_size / tetris::SHAPE_MATRIX_SIZE;
+    const qreal block_size = BLOCK_SIZE;
 
     int shape_width = 0;
     int shape_height = 0;
     int block_index = 0;
 
     const tetris::shape_matrix_t& matrix = *shape.get_matrix();
-    get_shape_size(matrix, shape_width, shape_height);
 
-    const qreal left = (Rect.width() - (block_size * shape_width)) / 2;
-    const qreal top = (Rect.height() - (block_size * shape_height)) / 2;
-
+    QRect shape_rect;
+    GetShapeRect(matrix, shape_rect);
+    const qreal left = (Rect.width() - (block_size * shape_rect.width())) / 2 - shape_rect.left() * block_size;
+    const qreal top = (Rect.height() - (block_size * shape_rect.height())) / 2;
     for(int x = 0; x < tetris::SHAPE_MATRIX_SIZE; ++x)
     {
         for(int y = 0; y < tetris::SHAPE_MATRIX_SIZE; ++y)
         {
-            tetris::block_t block = matrix[x][y];
-            if(tetris::BLOCK_NONE == block)
+            if(tetris::BLOCK_NONE == matrix[x][y])
                 continue;
 
             Q_ASSERT(block_index < tetris::SHAPE_BLOCKS_COUNT);
             QGraphicsRectItem* gi = Blocks[block_index++];
-
-            //TODO: WTF???
-            //gi->setPos({Rect.left() + padding + x * block_size, Rect.top() + padding + y * block_size});
             gi->setPos({left + x * block_size, top + y * block_size});
-
             gi->setBrush(QBrush{shape.get_block_type()});
             gi->show();
         }
     }
 }
-
+//////////////////////////////////////////////////////////////////////////////
 void CGSGame::Init()
 {
     constexpr qreal BLOCK_PADDING = 2;
@@ -344,6 +306,7 @@ void CGSGrid::Show()
 {
     Show(!ShowGrid);
 }
+//////////////////////////////////////////////////////////////////////////////
 QMainScene::QMainScene(QObject *parent) : QGraphicsScene{parent}
 {
 }
@@ -407,5 +370,4 @@ void QMainScene::UpdateBest()
     }
     frameBest.setText(text.c_str());
 }
-
-
+//////////////////////////////////////////////////////////////////////////////
